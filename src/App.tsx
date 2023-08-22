@@ -1,55 +1,59 @@
-import React from 'react'
+import React, { Suspense } from 'react'
 
-import { Box, OrbitControls, OrthographicCamera, Stats } from '@react-three/drei'
-import { Canvas } from '@react-three/fiber'
-import { useControls } from 'leva'
 import './App.css'
+import { Dialog } from '@headlessui/react'
+import { OrbitControls, Stage, Stats } from '@react-three/drei'
+import { Canvas } from '@react-three/fiber'
+import { useAtomValue, useSetAtom } from 'jotai'
+
+import EnvironmentWithSetting from './EnvironmentWithSetting'
+import PlatformGroup from './PlatformGroup'
+import { dialogExportPlatformsPatternsAtom, platformsPatternsAtom } from './stores/createPlatformStore'
 
 export default function App() {
   const mainCameraRef = React.useRef<THREE.PerspectiveCamera | undefined>(undefined)
 
-  const rotationOptions = React.useMemo(() => {
-    return {
-      x: { value: 0, min: -360, max: 360, step: 0.01 },
-      y: { value: 0, min: -360, max: 360, step: 0.01 },
-      z: { value: 0, min: -360, max: 360, step: 0.01 }
-    }
-  }, [])
-
-  const rotation = useControls('Rotation', rotationOptions)
-
   return (
-    <div
-      style={{
-        height: '100vh',
-        width: '100vw',
-        backgroundColor: 'gray'
-      }}
-    >
-      <Canvas
-        gl={{
-          antialias: true
-        }}
-        style={{
-          height: '100vh',
-          width: '100vw',
-          backgroundColor: 'yellow'
-        }}
-      >
-        <OrthographicCamera
-          position={[0, 0, 10]}
-          ref={mainCameraRef}
-          rotation={[rotation.x, rotation.x, rotation.z]}
-          zoom={200}
-          makeDefault
-        />
-        <ambientLight intensity={0.5} />
-        <Box attach='material' position={[0, 0, 0]}>
-          <meshNormalMaterial />
-        </Box>
-        <OrbitControls camera={mainCameraRef.current} />
-        <Stats />
+    <div className='relative w-screen h-screen'>
+      <Canvas eventPrefix='client' gl={{ preserveDrawingBuffer: true }}>
+        <Suspense>
+          <Stage position={[0, 0, 0]}>
+            <EnvironmentWithSetting />
+            <PlatformGroup />
+          </Stage>
+          <OrbitControls
+            camera={mainCameraRef.current}
+            enablePan={false}
+            enableRotate={false}
+            enableZoom={false}
+            maxPolarAngle={Math.PI / 4.1}
+            minPolarAngle={Math.PI / 4.1}
+          />
+          <Stats />
+        </Suspense>
       </Canvas>
     </div>
+  )
+}
+
+function DialogExport() {
+  const getPatternsAtom = useAtomValue(platformsPatternsAtom)
+  const getDialogExportPlatformsPatternsAtom = useAtomValue(dialogExportPlatformsPatternsAtom)
+  const setDialogExportPlatformsPatternsAtom = useSetAtom(dialogExportPlatformsPatternsAtom)
+
+  return (
+    <Dialog open={getDialogExportPlatformsPatternsAtom} onClose={() => setDialogExportPlatformsPatternsAtom(false)}>
+      <Dialog.Panel>
+        <Dialog.Title>Export data</Dialog.Title>
+        <Dialog.Description>
+          {getPatternsAtom.map((pattern, index) => {
+            if (pattern === undefined) return `pattern ${index}: undefined`
+            return `pattern ${index}: ${pattern}`
+          })}
+        </Dialog.Description>
+
+        <button onClick={() => setDialogExportPlatformsPatternsAtom(false)}>Close</button>
+      </Dialog.Panel>
+    </Dialog>
   )
 }

@@ -1,6 +1,6 @@
-#root {
-  text-align: center;
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 @keyframes logo-spin {
   from {
