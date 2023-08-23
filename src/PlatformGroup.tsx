@@ -1,10 +1,11 @@
 import React, { Suspense } from 'react'
 
-import { useSetAtom, useAtomValue } from 'jotai'
+import { useAtom } from 'jotai'
 import { button, folder, useControls } from 'leva'
 
 import Platform from './Platform'
-import { platformsPatternsAtom, dialogExportPlatformsPatternsAtom } from './stores/createPlatformStore'
+import { platformsAtom } from './stores/createPlatformStore'
+import { PlatformTypes, ItemTypes, PlatformModel } from './types'
 
 type PlatformGroupProps = {
   dimension2D?: [number, number]
@@ -12,69 +13,105 @@ type PlatformGroupProps = {
 }
 
 export const PatternContext = React.createContext<{
-  currentPatternPlatformsIndexes: Set<number> | undefined
-  setCurrentPatternPlatformsIndexes: (index: number) => void
+  currentPatternPlatforms: Array<PlatformModel>
+  setCurrentPatternPlatforms: (platformIndex: number) => void
 }>({
-  currentPatternPlatformsIndexes: new Set(),
-  setCurrentPatternPlatformsIndexes: () => {}
+  currentPatternPlatforms: [],
+  setCurrentPatternPlatforms: () => {}
 })
 
 export default function PlatformGroup({ dimension2D = [9, 9], distanceOffset = 1 }: PlatformGroupProps) {
-  const [currentPatternIndex, setCurrentPatternIndex] = React.useState<number | undefined>(undefined)
+  const [currentPatternIndex, setCurrentPatternIndex] = React.useState<number>(0)
+  const [currentPlatformType, setCurrentPlatformType] = React.useState<number>(PlatformTypes.Drop)
+  const [currentPlatformItemType, setCurrentPlatformItemType] = React.useState<number>(ItemTypes.Coin)
 
   const PlatformsGroupX = dimension2D[0]
   const PlatformsGroupY = dimension2D[1]
 
   let index = 0
 
-  const setPatternsAtom = useSetAtom(platformsPatternsAtom)
-  const getPatternsAtom = useAtomValue(platformsPatternsAtom)
+  const [getPatternsAtom, setPatternsAtom] = useAtom(platformsAtom)
+
+  React.useEffect(() => {
+    const subscription = () => {
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'ArrowLeft') {
+          openNextPattern()
+        }
+
+        if (event.key === 'ArrowRight') {
+          openPreviousPattern()
+        }
+      })
+    }
+
+    subscription()
+    return () => {
+      document.removeEventListener('keydown', subscription)
+    }
+  }, [])
+
+  const openNextPattern = React.useCallback(() => {
+    setCurrentPatternIndex((prev) => {
+      if (prev === getPatternsAtom.length - 1) return 0
+      return prev + 1
+    })
+  }, [currentPatternIndex])
+
+  const openPreviousPattern = React.useCallback(() => {
+    setCurrentPatternIndex((prev) => {
+      if (prev === 0) return getPatternsAtom.length - 1
+      return prev - 1
+    })
+  }, [currentPatternIndex])
 
   const patternIndexesOptions = React.useMemo(() => {
     return getPatternsAtom.map((_, index) => index)
   }, [getPatternsAtom])
 
   const setCurrentPatternPlatformsIndexes = React.useCallback(
-    (patternIndex: number) => {
-      if (currentPatternIndex === undefined) return
-
+    (platformIndex: number) => {
       setPatternsAtom((prev) => {
-        const newPatterns = [...prev]
+        const tempPatterns = [...prev]
 
-        let currentSet = newPatterns[currentPatternIndex]
-        if (currentSet === undefined) {
-          currentSet = new Set<number>([patternIndex])
-          newPatterns[currentPatternIndex] = currentSet
-          return newPatterns
-        }
+        const tempPattern = tempPatterns[currentPatternIndex]
+        const tempIndex = tempPattern.findIndex((platform) => platform.id === platformIndex)
 
-        if (currentSet.has(patternIndex)) {
-          currentSet.delete(patternIndex)
+        if (tempIndex === -1) {
+          tempPatterns[currentPatternIndex].push({
+            id: platformIndex,
+            platformType: currentPlatformType,
+            itemType: currentPlatformItemType
+          })
         } else {
-          currentSet.add(patternIndex)
+          tempPattern[tempIndex].platformType = currentPlatformType
+          tempPattern[tempIndex].itemType = currentPlatformItemType
         }
 
-        return newPatterns
+        tempPatterns[currentPatternIndex] = [...tempPattern]
+
+        return tempPatterns
       })
     },
-    [currentPatternIndex]
+    [currentPatternIndex, currentPlatformType, currentPlatformItemType]
   )
 
   const currentPatternPlatformsIndexes = React.useMemo(() => {
-    return currentPatternIndex !== undefined ? getPatternsAtom[currentPatternIndex] : undefined
-  }, [currentPatternIndex])
+    return getPatternsAtom[currentPatternIndex]
+  }, [getPatternsAtom, currentPatternIndex])
 
   const onButtonNewPatternPress = () => {
     setPatternsAtom((prev) => {
-      return [...prev, undefined]
+      return [...prev, [{ id: 0, platformType: 0, itemType: 0 }]]
     })
+
+    setCurrentPatternIndex(getPatternsAtom.length)
   }
 
   const onButtonExportPress = () => {
     const exportPatterns = [] as Array<string>
 
-    // reduce number[] only
-    getPatternsAtom.forEach((pattern, index) => {
+    getPatternsAtom.forEach((pattern) => {
       if (pattern === undefined) return
       exportPatterns.push(`[${Array.from(pattern)}]`)
     })
@@ -88,13 +125,26 @@ export default function PlatformGroup({ dimension2D = [9, 9], distanceOffset = 1
     {
       Patterns: folder(
         {
+          Platform: folder({
+            Type: {
+              onChange: (value) => setCurrentPlatformType(value),
+              options: PlatformTypes,
+              value: currentPlatformType
+            },
+            ItemType: {
+              onChange: (value) => setCurrentPlatformItemType(value),
+              options: ItemTypes,
+              render: (get) => get('Patterns.Platform.Type') === PlatformTypes.Item,
+              value: currentPlatformItemType
+            }
+          }),
           Index: {
             value: currentPatternIndex,
             onChange(value) {
-              console.info('🚀 ~ onChange ~ value:', value)
               setCurrentPatternIndex(value)
             },
-            options: patternIndexesOptions
+            options: patternIndexesOptions,
+            step: 1
           },
           'New Pattern': button(onButtonNewPatternPress),
           Export: button(onButtonExportPress)
@@ -109,8 +159,8 @@ export default function PlatformGroup({ dimension2D = [9, 9], distanceOffset = 1
     <Suspense>
       <PatternContext.Provider
         value={{
-          currentPatternPlatformsIndexes: currentPatternPlatformsIndexes,
-          setCurrentPatternPlatformsIndexes: setCurrentPatternPlatformsIndexes
+          currentPatternPlatforms: currentPatternPlatformsIndexes,
+          setCurrentPatternPlatforms: setCurrentPatternPlatformsIndexes
         }}
       >
         {Array.from({ length: PlatformsGroupX }).map((_, y) =>
@@ -118,7 +168,7 @@ export default function PlatformGroup({ dimension2D = [9, 9], distanceOffset = 1
             const newIndex = index++
             return (
               <Platform
-                index={newIndex}
+                id={newIndex}
                 key={newIndex}
                 position={[-x * distanceOffset, 0, y * distanceOffset]}
                 scale={[1, 0.1, 1]}
