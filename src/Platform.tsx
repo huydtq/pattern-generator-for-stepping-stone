@@ -13,8 +13,8 @@ type ItemType = (typeof ItemTypes)[keyof typeof ItemTypes]
 
 const platformColors: Record<PlatformType, Color> = {
   [PlatformTypes.None]: 'white',
-  [PlatformTypes.Item]: 'coral',
-  [PlatformTypes.Drop]: 'deepskyblue'
+  [PlatformTypes.Drop]: 'deepskyblue',
+  [PlatformTypes.Item]: 'coral'
 }
 
 const itemColors: Record<ItemType, Color> = {
@@ -32,18 +32,28 @@ export default function Platform({ position = [0, 0, 0], scale = [1, 0.1, 1], id
 
   const initialPosition = React.useMemo(() => position as [number, number, number], [])
 
-  const onPlatformClick = () => {
-    patternContext.setCurrentPatternPlatforms(id)
+  const onHoverPlatform = () => {
+    patternContext.setPlatform(id)
+  }
+
+  const onClickPlatform = () => {
+    patternContext.setPlatform(id, true)
   }
 
   const platformData: PlatformModel | undefined = React.useMemo(() => {
-    const yeaboi = Array.from(patternContext.currentPatternPlatforms)
+    const yeaboi = Array.from(patternContext.currentPattern)
     return yeaboi.find((platform) => platform.id === id)
-  }, [patternContext.currentPatternPlatforms])
+  }, [patternContext.currentPattern])
 
   return (
     <group>
-      <Box position={initialPosition} ref={boxRef} scale={scale} onClick={onPlatformClick}>
+      <Box
+        position={initialPosition}
+        ref={boxRef}
+        scale={scale}
+        onClick={onClickPlatform}
+        onPointerEnter={onHoverPlatform}
+      >
         <meshStandardMaterial
           color={platformColors[(platformData?.platformType || PlatformTypes.None) as PlatformType]}
         ></meshStandardMaterial>

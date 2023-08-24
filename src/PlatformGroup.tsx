@@ -1,10 +1,11 @@
 import React, { Suspense } from 'react'
 
-import { useAtom } from 'jotai'
-import { button, folder, useControls } from 'leva'
+import { useKeyboardControls } from '@react-three/drei'
+import { button, folder, LevaPanel, LevaStoreProvider, useControls, useCreateStore, useStoreContext } from 'leva'
 
+import { InputControls } from './hooks/useAppInputControls'
+import usePatternStorage from './hooks/usePatternStorage'
 import Platform from './Platform'
-import { platformsAtom } from './stores/createPlatformStore'
 import { PlatformTypes, ItemTypes, PlatformModel } from './types'
 
 type PlatformGroupProps = {
@@ -13,154 +14,182 @@ type PlatformGroupProps = {
 }
 
 export const PatternContext = React.createContext<{
-  currentPatternPlatforms: Array<PlatformModel>
-  setCurrentPatternPlatforms: (platformIndex: number) => void
+  currentPattern: Array<PlatformModel>
+  setPlatform: (platformIndex: number, isClick?: boolean) => void
 }>({
-  currentPatternPlatforms: [],
-  setCurrentPatternPlatforms: () => {}
+  currentPattern: [],
+  setPlatform: () => {}
 })
 
-export default function PlatformGroup({ dimension2D = [9, 9], distanceOffset = 1 }: PlatformGroupProps) {
-  const [currentPatternIndex, setCurrentPatternIndex] = React.useState<number>(0)
-  const [currentPlatformType, setCurrentPlatformType] = React.useState<number>(PlatformTypes.Drop)
-  const [currentPlatformItemType, setCurrentPlatformItemType] = React.useState<number>(ItemTypes.Coin)
+export default function PlatformGroupWrapper() {
+  const typesStore = useCreateStore()
+
+  return (
+    <LevaStoreProvider store={typesStore}>
+      <PlatformGroup />
+    </LevaStoreProvider>
+  )
+}
+
+function PlatformGroup({ dimension2D = [9, 9], distanceOffset = 1 }: PlatformGroupProps) {
+  const mouseDown = React.useRef<boolean>(false)
 
   const PlatformsGroupX = dimension2D[0]
   const PlatformsGroupY = dimension2D[1]
 
+  const [sub] = useKeyboardControls<InputControls>()
+  const patternStorage = usePatternStorage()
+
   let index = 0
 
-  const [getPatternsAtom, setPatternsAtom] = useAtom(platformsAtom)
-
   React.useEffect(() => {
-    const subscription = () => {
-      document.addEventListener('keydown', (event) => {
-        if (event.key === 'ArrowLeft') {
-          openNextPattern()
-        }
+    document.addEventListener('mousedown', setMouseDown)
+    document.addEventListener('mouseup', setMouseUp)
 
-        if (event.key === 'ArrowRight') {
-          openPreviousPattern()
-        }
-      })
-    }
-
-    subscription()
     return () => {
-      document.removeEventListener('keydown', subscription)
+      document.removeEventListener('mousedown', setMouseDown)
+      document.removeEventListener('mouseup', setMouseUp)
     }
   }, [])
 
-  const openNextPattern = React.useCallback(() => {
-    setCurrentPatternIndex((prev) => {
-      if (prev === getPatternsAtom.length - 1) return 0
-      return prev + 1
-    })
-  }, [currentPatternIndex])
-
-  const openPreviousPattern = React.useCallback(() => {
-    setCurrentPatternIndex((prev) => {
-      if (prev === 0) return getPatternsAtom.length - 1
-      return prev - 1
-    })
-  }, [currentPatternIndex])
-
-  const patternIndexesOptions = React.useMemo(() => {
-    return getPatternsAtom.map((_, index) => index)
-  }, [getPatternsAtom])
-
-  const setCurrentPatternPlatformsIndexes = React.useCallback(
-    (platformIndex: number) => {
-      setPatternsAtom((prev) => {
-        const tempPatterns = [...prev]
-
-        const tempPattern = tempPatterns[currentPatternIndex]
-        const tempIndex = tempPattern.findIndex((platform) => platform.id === platformIndex)
-
-        if (tempIndex === -1) {
-          tempPatterns[currentPatternIndex].push({
-            id: platformIndex,
-            platformType: currentPlatformType,
-            itemType: currentPlatformItemType
-          })
-        } else {
-          tempPattern[tempIndex].platformType = currentPlatformType
-          tempPattern[tempIndex].itemType = currentPlatformItemType
+  React.useEffect(() => {
+    const eventPressNext = sub(
+      (state) => state.e,
+      (pressed) => {
+        if (pressed) {
+          patternStorage.next()
         }
+      }
+    )
 
-        tempPatterns[currentPatternIndex] = [...tempPattern]
+    const eventPressPrevious = sub(
+      (state) => state.q,
+      (pressed) => {
+        if (pressed) {
+          patternStorage.previous()
+        }
+      }
+    )
 
-        return tempPatterns
-      })
-    },
-    [currentPatternIndex, currentPlatformType, currentPlatformItemType]
-  )
+    const eventPressDefault = sub(
+      (state) => state['0'],
+      (pressed) => {
+        if (pressed) {
+          set({ Type: PlatformTypes.None })
+        }
+      }
+    )
 
-  const currentPatternPlatformsIndexes = React.useMemo(() => {
-    return getPatternsAtom[currentPatternIndex]
-  }, [getPatternsAtom, currentPatternIndex])
+    const eventPressSlot2 = sub(
+      (state) => state['2'],
+      (pressed) => {
+        if (pressed) {
+          if (get('Type') === PlatformTypes.Item) {
+            set({ ItemType: get('ItemType') === ItemTypes.Coin ? ItemTypes.Power : ItemTypes.Coin })
+            return
+          }
+
+          set({ Type: PlatformTypes.Item })
+          set({ ItemType: ItemTypes.Coin })
+        }
+      }
+    )
+
+    const eventPressSlot1 = sub(
+      (state) => state['1'],
+      (pressed) => {
+        if (pressed) {
+          set({ Type: PlatformTypes.Drop })
+        }
+      }
+    )
+
+    return () => {
+      eventPressNext()
+      eventPressPrevious()
+      eventPressDefault()
+      eventPressSlot1()
+      eventPressSlot2()
+    }
+  }, [patternStorage])
+
+  const setMouseDown = () => {
+    mouseDown.current = true
+  }
+
+  const setMouseUp = () => {
+    mouseDown.current = false
+  }
 
   const onButtonNewPatternPress = () => {
-    setPatternsAtom((prev) => {
-      return [...prev, [{ id: 0, platformType: 0, itemType: 0 }]]
-    })
-
-    setCurrentPatternIndex(getPatternsAtom.length)
+    patternStorage.add()
   }
 
   const onButtonExportPress = () => {
-    const exportPatterns = [] as Array<string>
-
-    getPatternsAtom.forEach((pattern) => {
-      if (pattern === undefined) return
-      exportPatterns.push(`[${Array.from(pattern)}]`)
-    })
-
-    const params = exportPatterns.join('|')
     const domainUrl = window.location.origin
-    window.open(domainUrl + `/export?data=${params}`, 'noreferrer')
+    console.info('🚀 ~ onButtonExportPress ~ patternStorage.all():', patternStorage.all())
+    localStorage.setItem('patterns', JSON.stringify(patternStorage.all()))
+    window.open(domainUrl + `/export`, 'noreferrer')
   }
+
+  const setPlatform = (platformIndex: number, isClick: boolean = false) => {
+    if (mouseDown.current === false && isClick === false) return
+
+    patternStorage.set({
+      id: platformIndex,
+      platformType: get('Type'),
+      itemType: get('ItemType')
+    })
+  }
+
+  const arrayPatterns = React.useMemo(() => {
+    const tempPatterns = [...patternStorage.all()]
+
+    return tempPatterns.reduce((acc, _, index) => {
+      return Object.assign(acc, {
+        [`pattern_${index}`]: button(() => patternStorage.select(index), {
+          disabled: index === patternStorage.index
+        })
+      })
+    }, {})
+  }, [patternStorage])
 
   useControls(
     {
       Patterns: folder(
         {
-          Platform: folder({
-            Type: {
-              onChange: (value) => setCurrentPlatformType(value),
-              options: PlatformTypes,
-              value: currentPlatformType
-            },
-            ItemType: {
-              onChange: (value) => setCurrentPlatformItemType(value),
-              options: ItemTypes,
-              render: (get) => get('Patterns.Platform.Type') === PlatformTypes.Item,
-              value: currentPlatformItemType
-            }
-          }),
-          Index: {
-            value: currentPatternIndex,
-            onChange(value) {
-              setCurrentPatternIndex(value)
-            },
-            options: patternIndexesOptions,
-            step: 1
-          },
-          'New Pattern': button(onButtonNewPatternPress),
-          Export: button(onButtonExportPress)
+          ...arrayPatterns
         },
         { collapsed: false }
       )
     },
-    [currentPatternIndex, getPatternsAtom]
+    [arrayPatterns]
   )
+
+  const [_, set, get] = useControls(() => ({
+    Type: {
+      onChange: (value) => {},
+      options: PlatformTypes,
+      value: PlatformTypes.Drop,
+      transient: true
+    },
+    ItemType: {
+      onChange: (value) => {},
+      options: ItemTypes,
+      render: (get) => get('Type') === PlatformTypes.Item,
+      value: ItemTypes.Coin,
+      transient: true
+    },
+    'New Pattern': button(onButtonNewPatternPress),
+    Export: button(onButtonExportPress)
+  }))
 
   return (
     <Suspense>
       <PatternContext.Provider
         value={{
-          currentPatternPlatforms: currentPatternPlatformsIndexes,
-          setCurrentPatternPlatforms: setCurrentPatternPlatformsIndexes
+          currentPattern: patternStorage.current(),
+          setPlatform: setPlatform
         }}
       >
         {Array.from({ length: PlatformsGroupX }).map((_, y) =>

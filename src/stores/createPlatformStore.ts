@@ -7,12 +7,4 @@ export const platformsPatternsAtom = atom<Array<Set<number>>>([new Set<number>([
 
 export const platformsPatternsAtomStorage = atomWithStorage<Array<Set<number>>>('patterns', [new Set<number>([0])])
 
-export const platformsAtom = atom<Array<Array<PlatformModel>>>([
-  [
-    {
-      id: 0,
-      platformType: 0,
-      itemType: 0
-    }
-  ]
-])
+export const platformsAtom = atom<Array<Array<PlatformModel>>>([[]])
