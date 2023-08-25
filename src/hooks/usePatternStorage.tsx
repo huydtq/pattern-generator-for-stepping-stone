@@ -29,6 +29,24 @@ export default function usePatternStorage() {
     setPatternsAtom((prev) => {
       return [...prev, [{ id: 0, platformType: PlatformTypes.None, itemType: ItemTypes.Coin }]]
     })
+
+    setCurrentPatternIndex(getPatternsAtom.length)
+  }
+
+  const remove = () => {
+    setPatternsAtom((prev) => {
+      const tempPatterns = [...prev]
+      tempPatterns.splice(currentPatternIndex, 1)
+      return tempPatterns
+    })
+
+    setCurrentPatternIndex((prev) => {
+      if (prev === 0) {
+        return 0
+      }
+
+      return prev - 1
+    })
   }
 
   const current = () => {
@@ -40,7 +58,6 @@ export default function usePatternStorage() {
     const tempIndex = currentPattern.findIndex((platform) => platform.id === platformModel.id)
 
     if (tempIndex === -1) {
-      console.info('🚀 ~ set ~ tempIndex:', tempIndex)
       currentPattern.push({
         id: platformModel.id,
         platformType: platformModel.platformType,
@@ -63,7 +80,6 @@ export default function usePatternStorage() {
   }
 
   const all = () => {
-    console.info('🚀 ~ all ~ getPatternsAtom:', getPatternsAtom)
     return getPatternsAtom
   }
 
@@ -71,10 +87,12 @@ export default function usePatternStorage() {
     index: currentPatternIndex,
     current,
     add,
+    remove,
     previous,
     next,
     set,
     all,
-    select
+    select,
+    update: setPatternsAtom
   }
 }

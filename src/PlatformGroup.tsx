@@ -1,7 +1,8 @@
 import React, { Suspense } from 'react'
 
-import { useKeyboardControls } from '@react-three/drei'
-import { button, folder, LevaPanel, LevaStoreProvider, useControls, useCreateStore, useStoreContext } from 'leva'
+import { Html, useKeyboardControls } from '@react-three/drei'
+import { saveAs } from 'file-saver'
+import { button, buttonGroup, folder, LevaStoreProvider, useControls, useCreateStore } from 'leva'
 
 import { InputControls } from './hooks/useAppInputControls'
 import usePatternStorage from './hooks/usePatternStorage'
@@ -33,6 +34,7 @@ export default function PlatformGroupWrapper() {
 
 function PlatformGroup({ dimension2D = [9, 9], distanceOffset = 1 }: PlatformGroupProps) {
   const mouseDown = React.useRef<boolean>(false)
+  const inputFileRef = React.useRef<HTMLInputElement>(null!)
 
   const PlatformsGroupX = dimension2D[0]
   const PlatformsGroupY = dimension2D[1]
@@ -104,12 +106,32 @@ function PlatformGroup({ dimension2D = [9, 9], distanceOffset = 1 }: PlatformGro
       }
     )
 
+    const eventPressAdd = sub(
+      (state) => state.add,
+      (pressed) => {
+        if (pressed) {
+          patternStorage.add()
+        }
+      }
+    )
+
+    const eventPressRemove = sub(
+      (state) => state.remove,
+      (pressed) => {
+        if (pressed) {
+          patternStorage.remove()
+        }
+      }
+    )
+
     return () => {
       eventPressNext()
       eventPressPrevious()
       eventPressDefault()
       eventPressSlot1()
       eventPressSlot2()
+      eventPressAdd()
+      eventPressRemove()
     }
   }, [patternStorage])
 
@@ -121,14 +143,40 @@ function PlatformGroup({ dimension2D = [9, 9], distanceOffset = 1 }: PlatformGro
     mouseDown.current = false
   }
 
-  const onButtonNewPatternPress = () => {
-    patternStorage.add()
+  const onFileImported = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+
+    if (!file) return
+
+    const reader = new FileReader()
+
+    reader.onload = (e) => {
+      const parsedData = JSON.parse(e.target?.result as string) as Array<Array<PlatformModel>>
+      if (parsedData !== null) {
+        patternStorage.update(parsedData)
+        return
+      }
+    }
+
+    reader.onloadend = () => {
+      event.target.value = ''
+    }
+
+    reader.readAsText(file)
   }
 
   const onButtonExportPress = () => {
+    const dataToExport = [...patternStorage.all()]
+
+    saveAs(new Blob([JSON.stringify(dataToExport)]), 'export.json')
+  }
+
+  const onButtonImportPress = () => {
+    inputFileRef.current?.click()
+  }
+
+  const onButtonGeneratePress = () => {
     const domainUrl = window.location.origin
-    console.info('🚀 ~ onButtonExportPress ~ patternStorage.all():', patternStorage.all())
-    localStorage.setItem('patterns', JSON.stringify(patternStorage.all()))
     window.open(domainUrl + `/export`, 'noreferrer')
   }
 
@@ -168,20 +216,27 @@ function PlatformGroup({ dimension2D = [9, 9], distanceOffset = 1 }: PlatformGro
 
   const [_, set, get] = useControls(() => ({
     Type: {
-      onChange: (value) => {},
+      onChange: () => {},
       options: PlatformTypes,
       value: PlatformTypes.Drop,
       transient: true
     },
     ItemType: {
-      onChange: (value) => {},
+      onChange: () => {},
       options: ItemTypes,
       render: (get) => get('Type') === PlatformTypes.Item,
       value: ItemTypes.Coin,
       transient: true
     },
-    'New Pattern': button(onButtonNewPatternPress),
-    Export: button(onButtonExportPress)
+    Actions: buttonGroup({
+      Add: () => patternStorage.add(),
+      Remove: () => patternStorage.remove()
+    }),
+    Data: folder({
+      Generate: button(onButtonGeneratePress),
+      Export: button(onButtonExportPress),
+      Import: button(onButtonImportPress)
+    })
   }))
 
   return (
@@ -205,6 +260,16 @@ function PlatformGroup({ dimension2D = [9, 9], distanceOffset = 1 }: PlatformGro
             )
           })
         )}
+        <Html>
+          <input
+            ref={inputFileRef}
+            type='file'
+            style={{
+              display: 'none'
+            }}
+            onChange={onFileImported}
+          />
+        </Html>
       </PatternContext.Provider>
     </Suspense>
   )

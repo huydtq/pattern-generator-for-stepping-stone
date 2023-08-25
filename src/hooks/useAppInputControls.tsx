@@ -20,7 +20,9 @@ export enum InputControls {
   Left = 'a',
   Right = 'd',
   Up = 'space',
-  Down = 'ctrl'
+  Down = 'ctrl',
+  Add = 'add',
+  Remove = 'remove'
 }
 
 export default function useAppInputControls() {
@@ -97,6 +99,14 @@ export default function useAppInputControls() {
       {
         name: InputControls.Down,
         keys: ['ControlLeft']
+      },
+      {
+        name: InputControls.Add,
+        keys: ['Insert']
+      },
+      {
+        name: InputControls.Remove,
+        keys: ['Delete']
       }
     ],
     []

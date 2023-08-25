@@ -35,21 +35,21 @@ export default function useControlCamera(cameraRef: MutableRefObject<THREE.Camer
     }
   })
 
-  useControls({
-    [config.label]: folder(
-      {
-        position: {
-          value: [cameraRef?.current?.position.x, cameraRef?.current?.position.y, cameraRef?.current?.position.z],
-          label: 'Position'
-        },
-        rotation: {
-          value: [cameraRef?.current?.rotation.x, cameraRef?.current?.rotation.y, cameraRef?.current?.rotation.z],
-          label: 'Rotation'
-        }
-      },
-      {
-        render: () => config.ui
-      }
-    )
-  })
+  // useControls({
+  //   [config.label]: folder(
+  //     {
+  //       position: {
+  //         value: [cameraRef?.current?.position.x, cameraRef?.current?.position.y, cameraRef?.current?.position.z],
+  //         label: 'Position'
+  //       },
+  //       rotation: {
+  //         value: [cameraRef?.current?.rotation.x, cameraRef?.current?.rotation.y, cameraRef?.current?.rotation.z],
+  //         label: 'Rotation'
+  //       }
+  //     },
+  //     {
+  //       render: () => config.ui
+  //     }
+  //   )
+  // })
 }
