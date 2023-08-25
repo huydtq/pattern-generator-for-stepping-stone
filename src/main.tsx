@@ -10,16 +10,21 @@ import './index.css'
 import App from './App'
 import ExportPage from './ExportPage'
 
-const router = createBrowserRouter([
+const router = createBrowserRouter(
+  [
+    {
+      path: '/',
+      element: <App />
+    },
+    {
+      path: '/export',
+      element: <ExportPage />
+    }
+  ],
   {
-    path: '/',
-    element: <App />
-  },
-  {
-    path: '/export',
-    element: <ExportPage />
+    basename: '/pattern-generator-for-stepping-stone/'
   }
-])
+)
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

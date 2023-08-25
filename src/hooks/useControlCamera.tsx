@@ -2,7 +2,7 @@ import { MutableRefObject } from 'react'
 
 import { useKeyboardControls } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
-import { folder, useControls } from 'leva'
+// import { folder, useControls } from 'leva'
 import * as THREE from 'three'
 
 import { InputControls } from './useAppInputControls'
@@ -12,7 +12,7 @@ export type ControlCameraConfig = {
   ui: boolean
 }
 
-export default function useControlCamera(cameraRef: MutableRefObject<THREE.Camera>, config: ControlCameraConfig) {
+export default function useControlCamera(cameraRef: MutableRefObject<THREE.Camera>) {
   const [_, get] = useKeyboardControls<InputControls>()
 
   useFrame(() => {

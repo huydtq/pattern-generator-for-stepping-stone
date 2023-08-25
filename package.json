@@ -1,8 +1,8 @@
 {
-  "homepage": "https://huydtq.github.io/pattern-generator-for-stepping-stone-uefn",
+  "homepage": "https://huydtq.github.io/pattern-generator-for-stepping-stone",
   "name": "pattern-generator-for-stepping-stone-uefn",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.0.1",
   "type": "module",
   "scripts": {
     "dev": "vite",

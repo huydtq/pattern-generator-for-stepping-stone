@@ -28,10 +28,7 @@ function AppCanvas() {
 function StageCamera() {
   const mainCameraRef = React.useRef<THREE.PerspectiveCamera>(null!)
 
-  useControlCamera(mainCameraRef, {
-    label: 'Main Camera',
-    ui: false
-  })
+  useControlCamera(mainCameraRef)
 
   return <PerspectiveCamera position={[0, 10, 0]} ref={mainCameraRef} rotation={[1.5, 0, 0]} makeDefault />
 }
