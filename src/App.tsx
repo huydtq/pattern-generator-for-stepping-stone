@@ -1,7 +1,7 @@
 import React, { Suspense } from 'react'
 
 import './App.css'
-import { KeyboardControls, PerspectiveCamera, Stage, Stats } from '@react-three/drei'
+import { KeyboardControls, PerspectiveCamera, Stage } from '@react-three/drei'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { Provider } from 'jotai'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
