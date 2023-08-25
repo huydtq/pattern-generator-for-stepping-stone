@@ -2,6 +2,7 @@ import React from 'react'
 
 import { Box, Edges, Text } from '@react-three/drei'
 import { Color, Euler } from '@react-three/fiber'
+import _ from 'underscore'
 
 import { PatternContext } from './PlatformGroup'
 import { ItemTypes, PlatformModel, PlatformTypes } from './types'
@@ -60,12 +61,23 @@ export default function Platform({ position = [0, 0, 0], scale = [1, 0.1, 1], id
         <Edges />
       </Box>
       <Text
-        fontSize={0.5}
-        position={[initialPosition[0], initialPosition[1] + 0.1, initialPosition[2]]}
+        fontSize={0.2}
+        position={[initialPosition[0], initialPosition[1] + 0.1, initialPosition[2] - 0.2]}
         ref={textRef}
         rotation={textEuler}
         color={
-          platformData?.platformType === PlatformTypes.Item ? itemColors[platformData?.itemType as ItemType] : undefined
+          platformData?.platformType === PlatformTypes.Item ? itemColors[platformData?.itemType as ItemType] : 'black'
+        }
+      >
+        {platformData !== undefined ? _.invert(PlatformTypes)[platformData.platformType] : ''}
+      </Text>
+      <Text
+        fontSize={0.3}
+        position={[initialPosition[0], initialPosition[1] + 0.1, initialPosition[2] + 0.15]}
+        ref={textRef}
+        rotation={textEuler}
+        color={
+          platformData?.platformType === PlatformTypes.Item ? itemColors[platformData?.itemType as ItemType] : 'black'
         }
       >
         {id}

@@ -881,6 +881,11 @@
     lil-gui "~0.17.0"
     meshoptimizer "~0.18.1"
 
+"@types/underscore@^1.11.7":
+  version "1.11.7"
+  resolved "https://registry.yarnpkg.com/@types/underscore/-/underscore-1.11.7.tgz#fa644dd948a34b4e102e6d31c30823ecba6ba9c7"
+  integrity sha512-uXFrH3+/R8AkckdYPJdmJm537rAOWOUt4DW3ni2l2GdXe1YrdREqab6lqsq1hm76xEihV39/qTxKIevNpZw2Zg==
+
 "@types/webxr@*", "@types/webxr@^0.5.2":
   version "0.5.3"
   resolved "https://registry.yarnpkg.com/@types/webxr/-/webxr-0.5.3.tgz#eb959cb81f90854db443b4b8686d334577e34c36"
@@ -4773,6 +4778,11 @@ unbox-primitive@^1.0.2:
     has-bigints "^1.0.2"
     has-symbols "^1.0.3"
     which-boxed-primitive "^1.0.2"
+
+underscore@^1.13.6:
+  version "1.13.6"
+  resolved "https://registry.yarnpkg.com/underscore/-/underscore-1.13.6.tgz#04786a1f589dc6c09f761fc5f45b89e935136441"
+  integrity sha512-+A5Sja4HP1M08MaXya7p5LvjuM7K6q/2EaC0+iovj/wOcMsTzMvDFbasi/oSapiwOlt252IqsKqPjCl7huKS0A==
 
 universalify@^2.0.0:
   version "2.0.0"

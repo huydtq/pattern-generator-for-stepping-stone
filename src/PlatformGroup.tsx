@@ -3,6 +3,7 @@ import React, { Suspense } from 'react'
 import { Html, useKeyboardControls } from '@react-three/drei'
 import { saveAs } from 'file-saver'
 import { button, buttonGroup, folder, LevaStoreProvider, useControls, useCreateStore } from 'leva'
+import { useNavigate } from 'react-router-dom'
 
 import { InputControls } from './hooks/useAppInputControls'
 import usePatternStorage from './hooks/usePatternStorage'
@@ -175,9 +176,10 @@ function PlatformGroup({ dimension2D = [9, 9], distanceOffset = 1 }: PlatformGro
     inputFileRef.current?.click()
   }
 
+  const navigate = useNavigate()
+
   const onButtonGeneratePress = () => {
-    const domainUrl = window.location.origin
-    window.open(domainUrl + `/export`, 'noreferrer')
+    navigate('/export')
   }
 
   const setPlatform = (platformIndex: number, isClick: boolean = false) => {
@@ -208,7 +210,7 @@ function PlatformGroup({ dimension2D = [9, 9], distanceOffset = 1 }: PlatformGro
         {
           ...arrayPatterns
         },
-        { collapsed: false }
+        { collapsed: true }
       )
     },
     [arrayPatterns]
