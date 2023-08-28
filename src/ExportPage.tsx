@@ -13,7 +13,7 @@ export default function ExportPage() {
       const filteredPlatforms = item.filter((platform) => platform.platformType >= '0')
 
       const platformDatas = filteredPlatforms.map((platform) => {
-        return `platform_data{Id:=${platform.id}, ItemIndex:=${platform.platformType}}`
+        return `platform_data{Id:=${platform.id}, ItemIndex:=${platform.itemType}}`
       })
 
       const platformDatasString = platformDatas.join(',\n')

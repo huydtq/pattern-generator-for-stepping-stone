@@ -2,7 +2,7 @@
   "homepage": "https://huydtq.github.io/pattern-generator-for-stepping-stone",
   "name": "pattern-generator-for-stepping-stone",
   "private": true,
-  "version": "0.0.3",
+  "version": "0.0.4",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -20,6 +20,7 @@
     "@types/three": "^0.155.0",
     "autoprefixer": "^10.4.15",
     "file-saver": "^2.0.5",
+    "immer": "^10.0.2",
     "jotai": "^2.3.1",
     "leva": "^0.9.35",
     "maath": "^0.7.0",

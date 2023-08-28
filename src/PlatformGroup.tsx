@@ -2,13 +2,15 @@ import React, { Suspense } from 'react'
 
 import { Html, useKeyboardControls } from '@react-three/drei'
 import { saveAs } from 'file-saver'
+import { useAtom } from 'jotai'
 import { button, buttonGroup, folder, LevaStoreProvider, useControls, useCreateStore } from 'leva'
 import { useNavigate } from 'react-router-dom'
 
 import { InputControls } from './hooks/useAppInputControls'
 import usePatternStorage from './hooks/usePatternStorage'
 import Platform from './Platform'
-import { PlatformTypes, ItemTypes, PlatformModel } from './types'
+import { colorsAtom } from './stores/createPlatformStore'
+import { PlatformTypes, PlatformModel } from './types'
 
 type PlatformGroupProps = {
   dimension2D?: [number, number]
@@ -33,6 +35,33 @@ export default function PlatformGroupWrapper() {
   )
 }
 
+function useColorSettings() {
+  const [getColor, setColor] = useAtom(colorsAtom)
+
+  const platformColorsSetting = React.useMemo(() => {
+    return Object.keys(PlatformTypes).reduce((acc, key) => {
+      return Object.assign(acc, {
+        [key]: {
+          value: getColor[key as keyof typeof PlatformTypes] as string,
+          transient: true,
+          onChange: (value: string) => {
+            setColor((prev) => {
+              return {
+                ...prev,
+                [key as keyof typeof PlatformTypes]: value
+              }
+            })
+          }
+        }
+      })
+    }, {})
+  }, [])
+
+  useControls({
+    Colors: folder(platformColorsSetting)
+  })
+}
+
 function PlatformGroup({ dimension2D = [9, 9], distanceOffset = 1 }: PlatformGroupProps) {
   const mouseDown = React.useRef<boolean>(false)
   const inputFileRef = React.useRef<HTMLInputElement>(null!)
@@ -42,6 +71,8 @@ function PlatformGroup({ dimension2D = [9, 9], distanceOffset = 1 }: PlatformGro
 
   const [sub] = useKeyboardControls<InputControls>()
   const patternStorage = usePatternStorage()
+
+  useColorSettings()
 
   let index = 0
 
@@ -87,13 +118,7 @@ function PlatformGroup({ dimension2D = [9, 9], distanceOffset = 1 }: PlatformGro
       (state) => state['2'],
       (pressed) => {
         if (pressed) {
-          if (get('Type') === PlatformTypes.Item) {
-            set({ ItemType: get('ItemType') === ItemTypes.Coin ? ItemTypes.Power : ItemTypes.Coin })
-            return
-          }
-
           set({ Type: PlatformTypes.Item })
-          set({ ItemType: ItemTypes.Coin })
         }
       }
     )
@@ -188,7 +213,7 @@ function PlatformGroup({ dimension2D = [9, 9], distanceOffset = 1 }: PlatformGro
     patternStorage.set({
       id: platformIndex,
       platformType: get('Type'),
-      itemType: get('ItemType')
+      itemType: get('ItemTypeField').toString()
     })
   }
 
@@ -223,11 +248,13 @@ function PlatformGroup({ dimension2D = [9, 9], distanceOffset = 1 }: PlatformGro
       value: PlatformTypes.Drop,
       transient: true
     },
-    ItemType: {
+    ItemTypeField: {
       onChange: () => {},
-      options: ItemTypes,
+      value: 0,
+      step: 1,
+      min: 0,
+      max: 10,
       render: (get) => get('Type') === PlatformTypes.Item,
-      value: ItemTypes.Coin,
       transient: true
     },
     Actions: buttonGroup({

@@ -5,9 +5,9 @@ export type PlatformModel = {
 }
 
 export const PlatformTypes = {
-  None: '-1',
-  Drop: '0',
-  Item: '1'
+  None: '2',
+  Drop: '-1',
+  Item: '0'
 } as const
 
 export const ItemTypes = {

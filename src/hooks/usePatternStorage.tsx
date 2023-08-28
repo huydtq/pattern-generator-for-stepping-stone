@@ -1,6 +1,8 @@
 import React from 'react'
 
+import { produce } from 'immer'
 import { useAtom } from 'jotai'
+import _ from 'underscore'
 
 import { platformsAtom } from '../stores/createPlatformStore'
 import { ItemTypes, PlatformModel, PlatformTypes } from '../types'
@@ -54,25 +56,31 @@ export default function usePatternStorage() {
   }
 
   const set = (platformModel: PlatformModel) => {
-    const currentPattern = [...current()]
-    const tempIndex = currentPattern.findIndex((platform) => platform.id === platformModel.id)
+    setPatternsAtom(
+      produce((draft) => {
+        const currentPattern = [...draft[currentPatternIndex]]
+        const tempIndex = _.findIndex(currentPattern, (platform) => platform.id === platformModel.id)
 
-    if (tempIndex === -1) {
-      currentPattern.push({
-        id: platformModel.id,
-        platformType: platformModel.platformType,
-        itemType: platformModel.itemType
+        if (tempIndex === -1) {
+          if (platformModel.platformType === PlatformTypes.None) return
+
+          currentPattern.push({
+            id: platformModel.id,
+            platformType: platformModel.platformType,
+            itemType: platformModel.itemType
+          })
+        } else {
+          if (platformModel.platformType === PlatformTypes.None) {
+            currentPattern.splice(tempIndex, 1)
+          } else {
+            currentPattern[tempIndex].platformType = platformModel.platformType
+            currentPattern[tempIndex].itemType = platformModel.itemType
+          }
+        }
+
+        draft[currentPatternIndex] = currentPattern
       })
-    } else {
-      currentPattern[tempIndex].platformType = platformModel.platformType
-      currentPattern[tempIndex].itemType = platformModel.itemType
-    }
-
-    setPatternsAtom((prev) => {
-      const tempPatterns = [...prev]
-      tempPatterns[currentPatternIndex] = currentPattern
-      return tempPatterns
-    })
+    )
   }
 
   const select = (index: number) => {
