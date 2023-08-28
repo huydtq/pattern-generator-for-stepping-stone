@@ -10,13 +10,15 @@ export default function ExportPage() {
   const dataTest = useAtomValue(platformsAtom)
 
   const exportData = React.useMemo(() => {
-    return dataTest.map((item) => {
-      const filteredPlatforms = item
-        .sort((a, b) => a.id - b.id)
+    return [...dataTest].map((item) => {
+      const filteredPlatforms = [...item]
+        .sort((a, b) => Number(a.id) - Number(b.id))
         .filter((platform) => Number(platform.platformType) > Number(PlatformTypes.None))
 
       const platformDatas = filteredPlatforms.map((platform) => {
-        return `platform_data{Id:=${platform.id}, ItemIndex:=${platform.itemType}}`
+        return `platform_data{Id:=${platform.id}, ItemIndex:=${
+          platform.platformType === PlatformTypes.Drop ? platform.platformType : platform.itemType
+        }}`
       })
 
       const platformDatasString = platformDatas.join(',\n')
