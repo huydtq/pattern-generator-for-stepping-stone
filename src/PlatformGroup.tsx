@@ -227,7 +227,7 @@ function PlatformGroup({ dimension2D = [9, 9], distanceOffset = 1 }: PlatformGro
         })
       })
     }, {})
-  }, [patternStorage])
+  }, [patternStorage.current, patternStorage.index])
 
   useControls(
     {
@@ -235,7 +235,7 @@ function PlatformGroup({ dimension2D = [9, 9], distanceOffset = 1 }: PlatformGro
         {
           ...arrayPatterns
         },
-        { collapsed: true }
+        { collapsed: false }
       )
     },
     [arrayPatterns]

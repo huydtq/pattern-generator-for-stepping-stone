@@ -5,11 +5,25 @@ import { useAtom } from 'jotai'
 import _ from 'underscore'
 
 import { platformsAtom } from '../stores/createPlatformStore'
-import { ItemTypes, PlatformModel, PlatformTypes } from '../types'
+import { PlatformModel, PlatformTypes } from '../types'
 
 export default function usePatternStorage() {
   const [currentPatternIndex, setCurrentPatternIndex] = React.useState<number>(0)
   const [getPatternsAtom, setPatternsAtom] = useAtom(platformsAtom)
+  const countRef = React.useRef<number>(0)
+
+  React.useEffect(() => {
+    if (countRef.current < getPatternsAtom.length) {
+      setCurrentPatternIndex(getPatternsAtom.length - 1)
+    } else if (countRef.current > getPatternsAtom.length) {
+      if (currentPatternIndex > 0) {
+        setCurrentPatternIndex(getPatternsAtom.length - 1)
+      } else {
+        setCurrentPatternIndex(0)
+      }
+    }
+    countRef.current = getPatternsAtom.length
+  }, [getPatternsAtom])
 
   const previous = () => {
     if (currentPatternIndex === 0) {
@@ -29,25 +43,25 @@ export default function usePatternStorage() {
 
   const add = () => {
     setPatternsAtom((prev) => {
-      return [...prev, [{ id: 0, platformType: PlatformTypes.None, itemType: ItemTypes.Coin }]]
+      const temp = [...prev]
+      temp.push([])
+      return temp
     })
-
-    setCurrentPatternIndex(getPatternsAtom.length)
   }
 
   const remove = () => {
+    if (getPatternsAtom.length === 1) {
+      return
+    }
+
+    if (currentPatternIndex === getPatternsAtom.length - 1) {
+      setCurrentPatternIndex((prev) => prev - 1)
+    }
+
     setPatternsAtom((prev) => {
-      const tempPatterns = [...prev]
-      tempPatterns.splice(currentPatternIndex, 1)
-      return tempPatterns
-    })
-
-    setCurrentPatternIndex((prev) => {
-      if (prev === 0) {
-        return 0
-      }
-
-      return prev - 1
+      const temp = [...prev]
+      temp.splice(currentPatternIndex, 1)
+      return temp
     })
   }
 

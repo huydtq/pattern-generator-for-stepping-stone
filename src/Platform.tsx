@@ -62,7 +62,9 @@ export default function Platform({ position = [0, 0, 0], scale = [1, 0.1, 1], id
         rotation={textEuler}
       >
         {platformData !== undefined
-          ? `${_.invert(PlatformTypes)[platformData.platformType]}-${platformData.itemType}`
+          ? `${_.invert(PlatformTypes)[platformData.platformType]}${
+              platformData.platformType === PlatformTypes.Item ? platformData.itemType : ''
+            }`
           : ''}
       </Text>
       <Text

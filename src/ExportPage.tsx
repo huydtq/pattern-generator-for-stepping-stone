@@ -4,13 +4,16 @@ import React from 'react'
 import { useAtomValue } from 'jotai'
 
 import { platformsAtom } from './stores/createPlatformStore'
+import { PlatformTypes } from './types'
 
 export default function ExportPage() {
   const dataTest = useAtomValue(platformsAtom)
 
   const exportData = React.useMemo(() => {
     return dataTest.map((item) => {
-      const filteredPlatforms = item.filter((platform) => platform.platformType >= '0')
+      const filteredPlatforms = item
+        .sort((a, b) => a.id - b.id)
+        .filter((platform) => Number(platform.platformType) > Number(PlatformTypes.None))
 
       const platformDatas = filteredPlatforms.map((platform) => {
         return `platform_data{Id:=${platform.id}, ItemIndex:=${platform.itemType}}`
