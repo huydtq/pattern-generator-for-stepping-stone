@@ -20,7 +20,7 @@ export default function ExportPage() {
         const type = 'Type:=' + platform.type
         const behavior = 'ItemID:=' + platform.behaviour
         const delay = 'Delay:=' + platform.delay.toFixed(2)
-        const speed = 'Speed:=' + platform.delay.toFixed(2)
+        const speed = 'Speed:=' + platform.speed.toFixed(2)
 
         return `platform_data{${id},${type},${behavior},${delay},${speed}}`
       })
