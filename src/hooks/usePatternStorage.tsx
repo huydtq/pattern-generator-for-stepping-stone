@@ -76,19 +76,22 @@ export default function usePatternStorage() {
         const tempIndex = _.findIndex(currentPattern, (platform) => platform.id === platformModel.id)
 
         if (tempIndex === -1) {
-          if (platformModel.platformType === PlatformTypes.None) return
-
+          if (platformModel.type === PlatformTypes.None) return
           currentPattern.push({
             id: platformModel.id,
-            platformType: platformModel.platformType,
-            itemType: platformModel.itemType
+            type: platformModel.type,
+            behaviour: platformModel.behaviour,
+            speed: platformModel.speed,
+            delay: platformModel.delay
           })
         } else {
-          if (platformModel.platformType === PlatformTypes.None) {
+          if (platformModel.type === PlatformTypes.None) {
             currentPattern.splice(tempIndex, 1)
           } else {
-            currentPattern[tempIndex].platformType = platformModel.platformType
-            currentPattern[tempIndex].itemType = platformModel.itemType
+            currentPattern[tempIndex].type = platformModel.type
+            currentPattern[tempIndex].behaviour = platformModel.behaviour
+            currentPattern[tempIndex].speed = platformModel.speed
+            currentPattern[tempIndex].delay = platformModel.delay
           }
         }
 

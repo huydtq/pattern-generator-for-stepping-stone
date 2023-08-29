@@ -2,14 +2,13 @@ import React, { Suspense } from 'react'
 
 import { Html, useKeyboardControls } from '@react-three/drei'
 import { saveAs } from 'file-saver'
-import { useAtom } from 'jotai'
 import { button, buttonGroup, folder, LevaStoreProvider, useControls, useCreateStore } from 'leva'
 import { useNavigate } from 'react-router-dom'
 
 import { InputControls } from './hooks/useAppInputControls'
+import { useColorSettings } from './hooks/useColorSettings'
 import usePatternStorage from './hooks/usePatternStorage'
 import Platform from './Platform'
-import { colorsAtom } from './stores/createPlatformStore'
 import { PlatformTypes, PlatformModel } from './types'
 
 type PlatformGroupProps = {
@@ -33,33 +32,6 @@ export default function PlatformGroupWrapper() {
       <PlatformGroup />
     </LevaStoreProvider>
   )
-}
-
-function useColorSettings() {
-  const [getColor, setColor] = useAtom(colorsAtom)
-
-  const platformColorsSetting = React.useMemo(() => {
-    return Object.keys(PlatformTypes).reduce((acc, key) => {
-      return Object.assign(acc, {
-        [key]: {
-          value: getColor[key as keyof typeof PlatformTypes] as string,
-          transient: true,
-          onChange: (value: string) => {
-            setColor((prev) => {
-              return {
-                ...prev,
-                [key as keyof typeof PlatformTypes]: value
-              }
-            })
-          }
-        }
-      })
-    }, {})
-  }, [])
-
-  useControls({
-    Colors: folder(platformColorsSetting)
-  })
 }
 
 function PlatformGroup({ dimension2D = [9, 9], distanceOffset = 1 }: PlatformGroupProps) {
@@ -209,11 +181,12 @@ function PlatformGroup({ dimension2D = [9, 9], distanceOffset = 1 }: PlatformGro
 
   const setPlatform = (platformIndex: number, isClick: boolean = false) => {
     if (mouseDown.current === false && isClick === false) return
-
     patternStorage.set({
       id: platformIndex,
-      platformType: get('Type'),
-      itemType: get('ItemTypeField').toString()
+      type: get('Type'),
+      behaviour: get('Behavior'),
+      delay: Number(get('Delay').toFixed(2)),
+      speed: Number(get('Speed').toFixed(2))
     })
   }
 
@@ -241,32 +214,50 @@ function PlatformGroup({ dimension2D = [9, 9], distanceOffset = 1 }: PlatformGro
     [arrayPatterns]
   )
 
-  const [_, set, get] = useControls(() => ({
-    Type: {
-      onChange: () => {},
-      options: PlatformTypes,
-      value: PlatformTypes.Drop,
-      transient: true
-    },
-    ItemTypeField: {
-      onChange: () => {},
-      value: 0,
-      step: 1,
-      min: 0,
-      max: 10,
-      render: (get) => get('Type') === PlatformTypes.Item,
-      transient: true
-    },
-    Actions: buttonGroup({
-      Add: () => patternStorage.add(),
-      Remove: () => patternStorage.remove()
+  const [_, set, get] = useControls(
+    () => ({
+      Type: {
+        onChange: () => {},
+        options: PlatformTypes,
+        value: PlatformTypes.Drop,
+        transient: true
+      },
+      Behavior: {
+        onChange: () => {},
+        value: 0,
+        step: 1,
+        min: 0,
+        max: 10,
+        transient: true
+      },
+      Delay: {
+        onChange: () => {},
+        value: 0,
+        step: 0.05,
+        min: 0,
+        max: 10
+      },
+      Speed: {
+        onChange: () => {},
+        value: 10,
+        step: 0.5,
+        min: 0,
+        max: 100
+      },
+      Actions: buttonGroup({
+        Add: () => patternStorage.add(),
+        Remove: () => {
+          patternStorage.remove()
+        }
+      }),
+      Data: folder({
+        Generate: button(onButtonGeneratePress),
+        Export: button(onButtonExportPress),
+        Import: button(onButtonImportPress)
+      })
     }),
-    Data: folder({
-      Generate: button(onButtonGeneratePress),
-      Export: button(onButtonExportPress),
-      Import: button(onButtonImportPress)
-    })
-  }))
+    [patternStorage]
+  )
 
   return (
     <Suspense>

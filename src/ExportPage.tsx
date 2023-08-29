@@ -13,12 +13,16 @@ export default function ExportPage() {
     return [...dataTest].map((item) => {
       const filteredPlatforms = [...item]
         .sort((a, b) => Number(a.id) - Number(b.id))
-        .filter((platform) => Number(platform.platformType) > Number(PlatformTypes.None))
+        .filter((platform) => Number(platform.type) > Number(PlatformTypes.None))
 
       const platformDatas = filteredPlatforms.map((platform) => {
-        return `platform_data{Id:=${platform.id}, ItemIndex:=${
-          platform.platformType === PlatformTypes.Drop ? platform.platformType : platform.itemType
-        }}`
+        const id = 'Id:=' + platform.id
+        const type = 'Type:=' + platform.type
+        const behavior = 'ItemID:=' + platform.behaviour
+        const delay = 'Delay:=' + platform.delay.toFixed(2)
+        const speed = 'Speed:=' + platform.delay.toFixed(2)
+
+        return `platform_data{${id},${type},${behavior},${delay},${speed}}`
       })
 
       const platformDatasString = platformDatas.join(',\n')

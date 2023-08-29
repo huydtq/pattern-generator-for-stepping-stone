@@ -1,7 +1,9 @@
 export type PlatformModel = {
   id: number
-  platformType: string
-  itemType: string
+  type: string
+  behaviour: number
+  delay: number
+  speed: number
 }
 
 export const PlatformTypes = {
