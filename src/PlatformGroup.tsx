@@ -1,15 +1,14 @@
 import React, { Suspense } from 'react'
 
-import { Html, useKeyboardControls } from '@react-three/drei'
-import { saveAs } from 'file-saver'
-import { button, buttonGroup, folder, LevaStoreProvider, useControls, useCreateStore } from 'leva'
-import { useNavigate } from 'react-router-dom'
+import { Html } from '@react-three/drei'
+import { button, folder, LevaStoreProvider, useControls, useCreateStore } from 'leva'
 
-import { InputControls } from './hooks/useAppInputControls'
 import { useColorSettings } from './hooks/useColorSettings'
+import usePatternSettings from './hooks/usePatternSettings'
 import usePatternStorage from './hooks/usePatternStorage'
+import usePlatformSettings from './hooks/usePlatformSettings'
 import Platform from './Platform'
-import { PlatformTypes, PlatformModel } from './types'
+import { PlatformSchema } from './types'
 
 type PlatformGroupProps = {
   dimension2D?: [number, number]
@@ -17,7 +16,7 @@ type PlatformGroupProps = {
 }
 
 export const PatternContext = React.createContext<{
-  currentPattern: Array<PlatformModel>
+  currentPattern: Array<PlatformSchema>
   setPlatform: (platformIndex: number, isClick?: boolean) => void
 }>({
   currentPattern: [],
@@ -41,10 +40,11 @@ function PlatformGroup({ dimension2D = [9, 9], distanceOffset = 1 }: PlatformGro
   const PlatformsGroupX = dimension2D[0]
   const PlatformsGroupY = dimension2D[1]
 
-  const [sub] = useKeyboardControls<InputControls>()
   const patternStorage = usePatternStorage()
 
   useColorSettings()
+  usePatternSettings()
+  const platformSettings = usePlatformSettings()
 
   let index = 0
 
@@ -58,80 +58,7 @@ function PlatformGroup({ dimension2D = [9, 9], distanceOffset = 1 }: PlatformGro
     }
   }, [])
 
-  React.useEffect(() => {
-    const eventPressNext = sub(
-      (state) => state.e,
-      (pressed) => {
-        if (pressed) {
-          patternStorage.next()
-        }
-      }
-    )
-
-    const eventPressPrevious = sub(
-      (state) => state.q,
-      (pressed) => {
-        if (pressed) {
-          patternStorage.previous()
-        }
-      }
-    )
-
-    const eventPressDefault = sub(
-      (state) => state['0'],
-      (pressed) => {
-        if (pressed) {
-          set({ Type: PlatformTypes.None })
-        }
-      }
-    )
-
-    const eventPressSlot2 = sub(
-      (state) => state['2'],
-      (pressed) => {
-        if (pressed) {
-          set({ Type: PlatformTypes.Item })
-        }
-      }
-    )
-
-    const eventPressSlot1 = sub(
-      (state) => state['1'],
-      (pressed) => {
-        if (pressed) {
-          set({ Type: PlatformTypes.Drop })
-        }
-      }
-    )
-
-    const eventPressAdd = sub(
-      (state) => state.add,
-      (pressed) => {
-        if (pressed) {
-          patternStorage.add()
-        }
-      }
-    )
-
-    const eventPressRemove = sub(
-      (state) => state.remove,
-      (pressed) => {
-        if (pressed) {
-          patternStorage.remove()
-        }
-      }
-    )
-
-    return () => {
-      eventPressNext()
-      eventPressPrevious()
-      eventPressDefault()
-      eventPressSlot1()
-      eventPressSlot2()
-      eventPressAdd()
-      eventPressRemove()
-    }
-  }, [patternStorage])
+  React.useEffect(() => {}, [patternStorage])
 
   const setMouseDown = () => {
     mouseDown.current = true
@@ -149,7 +76,7 @@ function PlatformGroup({ dimension2D = [9, 9], distanceOffset = 1 }: PlatformGro
     const reader = new FileReader()
 
     reader.onload = (e) => {
-      const parsedData = JSON.parse(e.target?.result as string) as Array<Array<PlatformModel>>
+      const parsedData = JSON.parse(e.target?.result as string) as Array<Array<PlatformSchema>>
       if (parsedData !== null) {
         patternStorage.update(parsedData)
         return
@@ -163,30 +90,14 @@ function PlatformGroup({ dimension2D = [9, 9], distanceOffset = 1 }: PlatformGro
     reader.readAsText(file)
   }
 
-  const onButtonExportPress = () => {
-    const dataToExport = [...patternStorage.all()]
-
-    saveAs(new Blob([JSON.stringify(dataToExport)]), 'export.json')
-  }
-
-  const onButtonImportPress = () => {
-    inputFileRef.current?.click()
-  }
-
-  const navigate = useNavigate()
-
-  const onButtonGeneratePress = () => {
-    navigate('/export')
-  }
-
   const setPlatform = (platformIndex: number, isClick: boolean = false) => {
     if (mouseDown.current === false && isClick === false) return
     patternStorage.set({
       id: platformIndex,
-      type: get('Type'),
-      behaviour: get('Behavior'),
-      delay: Number(get('Delay').toFixed(2)),
-      speed: Number(get('Speed').toFixed(2))
+      type: platformSettings.type,
+      itemId: platformSettings.itemId,
+      delay: Number(platformSettings.delay.toFixed(2)),
+      speed: Number(platformSettings.speed.toFixed(2))
     })
   }
 
@@ -212,51 +123,6 @@ function PlatformGroup({ dimension2D = [9, 9], distanceOffset = 1 }: PlatformGro
       )
     },
     [arrayPatterns]
-  )
-
-  const [_, set, get] = useControls(
-    () => ({
-      Type: {
-        onChange: () => {},
-        options: PlatformTypes,
-        value: PlatformTypes.Drop,
-        transient: true
-      },
-      Behavior: {
-        onChange: () => {},
-        value: 0,
-        step: 1,
-        min: 0,
-        max: 10,
-        transient: true
-      },
-      Delay: {
-        onChange: () => {},
-        value: 0,
-        step: 0.05,
-        min: 0,
-        max: 10
-      },
-      Speed: {
-        onChange: () => {},
-        value: 10,
-        step: 0.5,
-        min: 0,
-        max: 100
-      },
-      Actions: buttonGroup({
-        Add: () => patternStorage.add(),
-        Remove: () => {
-          patternStorage.remove()
-        }
-      }),
-      Data: folder({
-        Generate: button(onButtonGeneratePress),
-        Export: button(onButtonExportPress),
-        Import: button(onButtonImportPress)
-      })
-    }),
-    [patternStorage]
   )
 
   return (

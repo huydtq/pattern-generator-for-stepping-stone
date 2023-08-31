@@ -1,7 +1,13 @@
-export type PlatformModel = {
+export type PatternSchema = {
+  maxDelay: number
+  targetDistance: number
+  targetRevertSpeed: number
+}
+
+export type PlatformSchema = {
   id: number
   type: string
-  behaviour: number
+  itemId: number
   delay: number
   speed: number
 }

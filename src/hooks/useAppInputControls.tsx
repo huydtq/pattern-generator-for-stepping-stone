@@ -22,7 +22,11 @@ export enum InputControls {
   Up = 'space',
   Down = 'ctrl',
   Add = 'add',
-  Remove = 'remove'
+  Remove = 'remove',
+  IncreaseValue = 'increaseValue',
+  DecreaseValue = 'decreaseValue',
+  NextOption = 'nextOption',
+  PreviousOption = 'previousOption'
 }
 
 export default function useAppInputControls() {
@@ -70,11 +74,11 @@ export default function useAppInputControls() {
       },
       {
         name: InputControls.Next,
-        keys: ['KeyE']
+        keys: ['KeyC']
       },
       {
         name: InputControls.Previous,
-        keys: ['KeyQ']
+        keys: ['KeyZ']
       },
       {
         name: InputControls.Forward,
@@ -107,6 +111,22 @@ export default function useAppInputControls() {
       {
         name: InputControls.Remove,
         keys: ['Delete']
+      },
+      {
+        name: InputControls.IncreaseValue,
+        keys: ['Period', 'KeyF']
+      },
+      {
+        name: InputControls.DecreaseValue,
+        keys: ['Comma', 'KeyV']
+      },
+      {
+        name: InputControls.NextOption,
+        keys: ['KeyE']
+      },
+      {
+        name: InputControls.PreviousOption,
+        keys: ['KeyQ']
       }
     ],
     []

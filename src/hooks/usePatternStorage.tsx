@@ -1,16 +1,65 @@
 import React from 'react'
 
+import { useKeyboardControls } from '@react-three/drei'
 import { produce } from 'immer'
 import { useAtom } from 'jotai'
 import _ from 'underscore'
 
-import { platformsAtom } from '../stores/createPlatformStore'
-import { PlatformModel, PlatformTypes } from '../types'
+import { InputControls } from './useAppInputControls'
+import { patternsAtom } from '../stores/createAppStore'
+import { PlatformSchema, PlatformTypes } from '../types'
 
 export default function usePatternStorage() {
   const [currentPatternIndex, setCurrentPatternIndex] = React.useState<number>(0)
-  const [getPatternsAtom, setPatternsAtom] = useAtom(platformsAtom)
+  const [getPatternsAtom, setPatternsAtom] = useAtom(patternsAtom)
   const countRef = React.useRef<number>(0)
+
+  const [sub] = useKeyboardControls<InputControls>()
+
+  React.useEffect(() => {
+    const eventPressNext = sub(
+      (state) => state.e,
+      (pressed) => {
+        if (pressed) {
+          next()
+        }
+      }
+    )
+
+    const eventPressPrevious = sub(
+      (state) => state.q,
+      (pressed) => {
+        if (pressed) {
+          previous()
+        }
+      }
+    )
+
+    const eventPressAdd = sub(
+      (state) => state.add,
+      (pressed) => {
+        if (pressed) {
+          add()
+        }
+      }
+    )
+
+    const eventPressRemove = sub(
+      (state) => state.remove,
+      (pressed) => {
+        if (pressed) {
+          remove()
+        }
+      }
+    )
+
+    return () => {
+      eventPressNext()
+      eventPressPrevious()
+      eventPressAdd()
+      eventPressRemove()
+    }
+  }, [])
 
   React.useEffect(() => {
     if (countRef.current < getPatternsAtom.length) {
@@ -69,10 +118,10 @@ export default function usePatternStorage() {
     return getPatternsAtom[currentPatternIndex]
   }
 
-  const set = (platformModel: PlatformModel) => {
+  const set = (platformModel: PlatformSchema) => {
     setPatternsAtom(
       produce((draft) => {
-        const currentPattern = [...draft[currentPatternIndex]]
+        const currentPattern = [...draft[currentPatternIndex]] as PlatformSchema[]
         const tempIndex = _.findIndex(currentPattern, (platform) => platform.id === platformModel.id)
 
         if (tempIndex === -1) {
@@ -80,16 +129,16 @@ export default function usePatternStorage() {
           currentPattern.push({
             id: platformModel.id,
             type: platformModel.type,
-            behaviour: platformModel.behaviour,
+            itemId: platformModel.itemId,
             speed: platformModel.speed,
             delay: platformModel.delay
-          })
+          } as PlatformSchema)
         } else {
           if (platformModel.type === PlatformTypes.None) {
             currentPattern.splice(tempIndex, 1)
           } else {
             currentPattern[tempIndex].type = platformModel.type
-            currentPattern[tempIndex].behaviour = platformModel.behaviour
+            currentPattern[tempIndex].itemId = platformModel.itemId
             currentPattern[tempIndex].speed = platformModel.speed
             currentPattern[tempIndex].delay = platformModel.delay
           }
