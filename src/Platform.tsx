@@ -6,10 +6,10 @@ import { useAtomValue } from 'jotai'
 import _ from 'underscore'
 
 import { PatternContext } from './PlatformGroup'
-import { colorsAtom } from './stores/createPlatformStore'
-import { PlatformModel, PlatformTypes } from './types'
+import { colorSettingsAtom } from './stores/createAppStore'
+import { PlatformSchema, PlatformTypes } from './types'
 
-export type PlatformProps = React.ComponentProps<typeof Box> & Pick<PlatformModel, 'id'>
+export type PlatformProps = React.ComponentProps<typeof Box> & Pick<PlatformSchema, 'id'>
 
 // type type = (typeof types)[keyof typeof types]
 
@@ -18,11 +18,11 @@ const textEuler: Euler = [-1.5, 0, 0]
 export default function Platform({ position = [0, 0, 0], scale = [1, 0.1, 1], id }: PlatformProps) {
   const boxRef = React.useRef<THREE.Mesh>(null!)
   const textRef = React.useRef<THREE.Mesh>(null!)
-  const getColorsSetting = useAtomValue(colorsAtom)
+  const getColorsSetting = useAtomValue(colorSettingsAtom)
 
   const patternContext = React.useContext(PatternContext)
 
-  const platformData: PlatformModel | undefined = React.useMemo(() => {
+  const platformData: PlatformSchema | undefined = React.useMemo(() => {
     const yeaboi = Array.from(patternContext.currentPattern)
     return yeaboi.find((platform) => platform.id === id)
   }, [patternContext.currentPattern])
@@ -78,13 +78,31 @@ export default function Platform({ position = [0, 0, 0], scale = [1, 0.1, 1], id
       platformData && (
         <>
           <Text
-            color='black'
-            fontSize={0.11}
-            position={[initialPosition[0], initialPosition[1] + 0.1, initialPosition[2] - 0.1]}
+            color='red'
+            fontSize={0.12}
+            position={[initialPosition[0], initialPosition[1] + 0.1, initialPosition[2] - 0.125]}
             ref={textRef}
             rotation={textEuler}
           >
-            {`B:${platformData.behaviour}_D:${platformData.delay}_S:${platformData.speed}`}
+            {`Item:${platformData.itemId}`}
+          </Text>
+          <Text
+            color='green'
+            fontSize={0.12}
+            position={[initialPosition[0], initialPosition[1] + 0.1, initialPosition[2]]}
+            ref={textRef}
+            rotation={textEuler}
+          >
+            {`Delay:${platformData.delay}`}
+          </Text>
+          <Text
+            color='blue'
+            fontSize={0.12}
+            position={[initialPosition[0], initialPosition[1] + 0.1, initialPosition[2] + 0.125]}
+            ref={textRef}
+            rotation={textEuler}
+          >
+            {`Speed:${platformData.speed}`}
           </Text>
         </>
       )
@@ -96,7 +114,7 @@ export default function Platform({ position = [0, 0, 0], scale = [1, 0.1, 1], id
       <Text
         color='black'
         fontSize={0.2}
-        position={[initialPosition[0], initialPosition[1] + 0.1, initialPosition[2] + 0.15]}
+        position={[initialPosition[0], initialPosition[1] + 0.1, initialPosition[2] + 0.275]}
         ref={textRef}
         rotation={textEuler}
       >

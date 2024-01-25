@@ -1,7 +1,9 @@
 import React, { Suspense } from 'react'
 
 import { Html } from '@react-three/drei'
-import { button, folder, LevaStoreProvider, useControls, useCreateStore } from 'leva'
+import saveAs from 'file-saver'
+import { button, buttonGroup, folder, LevaStoreProvider, useControls, useCreateStore } from 'leva'
+import { useNavigate } from 'react-router-dom'
 
 import { useColorSettings } from './hooks/useColorSettings'
 import usePatternSettings from './hooks/usePatternSettings'
@@ -113,6 +115,22 @@ function PlatformGroup({ dimension2D = [9, 9], distanceOffset = 1 }: PlatformGro
     }, {})
   }, [patternStorage.current, patternStorage.index])
 
+  const onButtonExportPress = () => {
+    const dataToExport = [...patternStorage.all()]
+
+    saveAs(new Blob([JSON.stringify(dataToExport)]), 'export.json')
+  }
+
+  const onButtonImportPress = () => {
+    inputFileRef.current?.click()
+  }
+
+  const navigate = useNavigate()
+
+  const onButtonGeneratePress = () => {
+    navigate('/export')
+  }
+
   useControls(
     {
       Patterns: folder(
@@ -120,8 +138,20 @@ function PlatformGroup({ dimension2D = [9, 9], distanceOffset = 1 }: PlatformGro
           ...arrayPatterns
         },
         { collapsed: false }
-      )
+      ),
+      Actions: buttonGroup({
+        Add: () => patternStorage.add(),
+        Remove: () => {
+          patternStorage.remove()
+        }
+      }),
+      Data: folder({
+        Generate: button(onButtonGeneratePress),
+        Export: button(onButtonExportPress),
+        Import: button(onButtonImportPress)
+      })
     },
+
     [arrayPatterns]
   )
 

@@ -1,11 +1,15 @@
 import { WritableAtom, atom } from 'jotai'
-import { RESET, atomWithStorage } from 'jotai/utils'
+import { RESET } from 'jotai/utils'
 
 import { PatternSchema, PlatformSchema, PlatformTypes } from '../types'
 
 export type PlatformSetableValues = Omit<PlatformSchema, 'id'>
 export type PlatformSettingsSchema = { currentOption: keyof PlatformSetableValues } & PlatformSetableValues
 export type PatternSettingsSchema = Omit<PatternSchema, 'maxDelay'>
+
+// type PatternDataType = PatternSchema & {
+//   platforms: Array<PlatformSchema>
+// }
 
 export const patternsAtom = atomWithLocalStorage<Array<Array<PlatformSchema>>>('patterns', [[]])
 export const platformSettingsAtom = atomWithLocalStorage<PlatformSettingsSchema>('platformSettings', {
@@ -42,7 +46,8 @@ function atomWithLocalStorage<Value>(
   const derivedAtom = atom(
     (get) => get(baseAtom),
     (get, set, update: SetStateActionWithReset<Value>) => {
-      const nextValue = typeof update === 'function' ? update(get(baseAtom)) : update
+      const nextValue =
+        typeof update === 'function' ? (update as (prev: Value) => Value | typeof RESET)(get(baseAtom)) : update
       set(baseAtom, nextValue)
       localStorage.setItem(key, JSON.stringify(nextValue))
     }

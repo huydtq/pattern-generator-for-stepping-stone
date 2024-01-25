@@ -3,11 +3,11 @@ import React from 'react'
 
 import { useAtomValue } from 'jotai'
 
-import { platformsAtom } from './stores/createPlatformStore'
+import { patternsAtom } from './stores/createAppStore'
 import { PlatformTypes } from './types'
 
 export default function ExportPage() {
-  const dataTest = useAtomValue(platformsAtom)
+  const dataTest = useAtomValue(patternsAtom)
 
   const exportData = React.useMemo(() => {
     return [...dataTest].map((item) => {
@@ -18,16 +18,21 @@ export default function ExportPage() {
       const platformDatas = filteredPlatforms.map((platform) => {
         const id = 'Id:=' + platform.id
         const type = 'Type:=' + platform.type
-        const behavior = 'ItemID:=' + platform.behaviour
+        const itemId = 'ItemID:=' + platform.itemId
         const delay = 'Delay:=' + platform.delay.toFixed(2)
         const speed = 'Speed:=' + platform.speed.toFixed(2)
 
-        return `platform_data{${id},${type},${behavior},${delay},${speed}}`
+        return `platform_data{${id},${type},${itemId},${delay},${speed}}`
       })
 
       const platformDatasString = platformDatas.join(',\n')
 
+      const getMaxDelayTime = Math.max(...filteredPlatforms.map((platform) => platform.delay))
+
       return `stage_data{
+            MaxDelayTime:=${getMaxDelayTime.toFixed(2)},
+            MoveDistance:=20.0,
+            RevertSpeed:=10.0,
             PlatformDatas:= array
             {
                 ${platformDatasString}
